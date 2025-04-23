@@ -32,14 +32,14 @@ android {
         configureEach {
             //应用名
             //app name
-            resValue("string","app_name","Turnip 25.0.1 R27C SDK29")
+            resValue("string","app_name","Turnip 25.2.0_a710_a720_test")
             //包名后缀
             //package name Suffix
-            applicationIdSuffix = ".turnip2501.r27c.sdk29"
+            applicationIdSuffix = ".turnip2520.r27c.sdk29"
 
             //驱动在启动器内显示的名称
             //The name displayed by the driver in the launcher
-            manifestPlaceholders["driver"] = "Turnip 25.0.1 r27c sdk29"
+            manifestPlaceholders["driver"] = "Turnip 25.2.0_a710_a720_test"
         }
     }
     compileOptions {
