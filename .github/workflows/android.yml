@@ -18,6 +18,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      ANDROID_HOME: ${{ github.workspace }}/.android-sdk
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Set up JDK 21
@@ -28,7 +30,17 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
       - name: Install Android SDK packages
-        run: sdkmanager 'platforms;android-37.0' 'build-tools;36.0.0'
+        shell: bash
+        run: |
+          mkdir -p "$ANDROID_HOME/cmdline-tools"
+          curl --fail --location --retry 3 \
+            'https://dl.google.com/android/repository/commandlinetools-linux-16111833_latest.zip' \
+            --output "$RUNNER_TEMP/android-cli.zip"
+          echo "e025545c62a8e64c7559119566a569fb1dec5f60  $RUNNER_TEMP/android-cli.zip" | sha1sum --check
+          unzip -q "$RUNNER_TEMP/android-cli.zip" -d "$ANDROID_HOME/cmdline-tools"
+          mv "$ANDROID_HOME/cmdline-tools/cmdline-tools" "$ANDROID_HOME/cmdline-tools/latest"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/android" "--sdk=$ANDROID_HOME" sdk install 'platforms/android-37.0'
+          "$ANDROID_HOME/cmdline-tools/latest/bin/android" "--sdk=$ANDROID_HOME" sdk install 'build-tools/36.0.0'
       - name: Build and lint test APK
         run: ./gradlew :app:assembleDebug :app:lintDebug --no-daemon --console=plain
       - name: Upload test APK
