@@ -1,53 +1,72 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.jetbrains.kotlin.android)
+}
+
+val signingValues = listOf("FCL_KEYSTORE", "FCL_STORE_PASSWORD", "FCL_KEY_ALIAS", "FCL_KEY_PASSWORD")
+    .associateWith { providers.environmentVariable(it).orNull }
+val hasReleaseSigning = signingValues.values.all { !it.isNullOrBlank() }
+if (gradle.startParameter.taskNames.any { it.contains("release", ignoreCase = true) } && !hasReleaseSigning) {
+    throw GradleException("Release signing is required. Use build-release.ps1 or set all FCL signing environment variables.")
 }
 
 android {
     namespace = "com.mio.plugin.renderer"
-    compileSdk = 34
-
-    signingConfigs {
-        create("releaseBuild") {
-            storeFile = file("FCL-key.jks")
-            storePassword = "666666"
-            keyAlias = "FCL-Key"
-            keyPassword = "666666"
-        }
-    }
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.mio.plugin.renderer"
-        minSdk = 26
-        targetSdk = 34
+        // MrPurple T30 requires Android 11 / API 30 (see upstream meta.json).
+        minSdk = 30
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
+    }
+
+    buildFeatures {
+        resValues = true
+    }
+
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = file(signingValues.getValue("FCL_KEYSTORE")!!)
+                storePassword = signingValues.getValue("FCL_STORE_PASSWORD")
+                keyAlias = signingValues.getValue("FCL_KEY_ALIAS")
+                keyPassword = signingValues.getValue("FCL_KEY_PASSWORD")
+            }
+        }
+    }
+
+    packaging {
+        jniLibs {
+            // FCL needs the installed nativeLibraryDir, so keep libraries extracted.
+            useLegacyPackaging = true
+            // Preserve the upstream prebuilt binary exactly; no NDK stripping.
+            keepDebugSymbols += "**/libvulkan_freedreno.so"
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("releaseBuild")
+            if (hasReleaseSigning) signingConfig = signingConfigs.getByName("release")
         }
         configureEach {
             //应用名
             //app name
-            resValue("string","app_name","Turnip 25.0.1 R27C SDK29")
+            resValue("string", "app_name", "Turnip 26.3.0")
             //包名后缀
             //package name Suffix
-            applicationIdSuffix = ".turnip2501.r27c.sdk29"
+            applicationIdSuffix = ".turnip2630"
 
             //驱动在启动器内显示的名称
             //The name displayed by the driver in the launcher
-            manifestPlaceholders["driver"] = "Turnip 25.0.1 r27c sdk29"
+            manifestPlaceholders["driver"] = "Turnip 26.3.0_MrPurple"
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-    kotlinOptions {
-        jvmTarget = "1.8"
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 

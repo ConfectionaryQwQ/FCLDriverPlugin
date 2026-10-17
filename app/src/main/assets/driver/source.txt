@@ -1,0 +1,7 @@
+Upstream: https://github.com/MrPurple666/purple-turnip/releases/tag/vturnip_mrpurple_T30-toasted.adpkg
+Author: Mr_Purple_666
+Build: T30 / Mesa 26.3.0-devel / git 62ac221a33
+Original library: vulkan.purple.so
+Packaged library: libvulkan_freedreno.so (renamed only; binary unchanged)
+SHA-256: 1d80dfa019659b008e4669311db5b1e4a02af59ff1d5458a98e2f5fe18ed013b
+Minimum Android API: 30
